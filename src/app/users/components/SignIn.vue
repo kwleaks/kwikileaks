@@ -44,7 +44,8 @@
 </template>
 <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.4"></script>
 <script>
-
+// var server_url = "http://localhost:3000"
+var server_url = "https://warm-shelf-71293.herokuapp.com"
 export default {
   name: 'SignIn',
   // props: ['form'],
@@ -66,7 +67,7 @@ export default {
     registerUser (event) {
       event.preventDefault();
       var newUser = this.form;
-      this.$http.post('http://localhost:3000/users/addUser', newUser).then(function (response) {
+      this.$http.post( server_url+'/users/addUser', newUser).then(function (response) {
     // Success
           console.log(response.data)
           console.log('yay')
@@ -79,7 +80,7 @@ export default {
     loginUser (event) {
       alert(JSON.stringify(this.loginform));
       let user = this.loginform;
-      this.$http.post('http://localhost:3000/session/create', user).then((response) => {
+      this.$http.post( server_url + '/session/create', user).then((response) => {
         console.log(response)
         //re route to the user's profile 
         //stuff about session... can only see profile and other stuff if logged in

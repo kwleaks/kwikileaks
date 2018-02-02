@@ -9,13 +9,16 @@ import VueMq from 'vue-mq'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 import VueResource from "vue-resource" // for HTTP requests
+import 'vue-awesome/icons'
+import Icon from 'vue-awesome/components/Icon.vue'
 
 Vue.use(BootstrapVue);
 Vue.use(VueResource);
 Vue.use(VueGoogleMaps);
 Vue.use(VueMq, {
   breakpoints: {
-    sm: 480,
+    xs: 480,
+    sm: 900,
     md: 1250,
     lg: Infinity
   }
@@ -31,7 +34,7 @@ Vue.use(VueMq, {
 //   }
 // })
 
-
+Vue.component('icon', Icon)
 Vue.config.productionTip = false
 console.log(App);
 /* eslint-disable no-new */

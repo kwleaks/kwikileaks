@@ -1,38 +1,13 @@
-
  <template>
   <div class="main">
     <div id="map"></div>
-<!--     <b-modal id="modal1" ref="myModalRef" :title="modalTitle">
-      <p class="my-4">
-        <span>Address: {{modalAddress}}</span>
-        <span>Hours: {{modalHours}}</span>
-        <span>Rating: {{modalRating}}</span>
-      </p>
-       <div slot="modal-footer" class="w-100">
-         <b-btn size="sm" variant="primary" @click="viewToilet">See More</b-btn>
-         <b-btn size="sm" variant="primary" @click="show=false">
-           Close
-         </b-btn>
-       </div>
-    </b-modal> -->
     <div id="info-content">
-<!--         <div>
-            <p class="my-4">
-        <span>Address: {{modalAddress}}</span>
-        <span>Hours: {{modalHours}}</span>
-        <span>Rating: {{modalRating}}</span>
-      </p>
-         <button size="sm" variant="primary" @click="viewToilet">See More</button>
-         <button size="sm" variant="primary" @click="show=false">
-           Close
-         </button>
-       </div>` -->
     </div>
   </div>
 </template>
 
 <script>
-
+var server_url = "https://warm-shelf-71293.herokuapp.com"
 export default {
 name: 'MainView',
 data() {
@@ -45,38 +20,30 @@ data() {
       modalHours: undefined,
       modalRating: undefined,
       infoContent: "",
-      // searchtext: undefined
+      dayOfWeek: 0,
+      currentToilet: undefined,
+      // searchtet: undefined
     }
   },
   beforeCreate: function(){
      // get all bathrooms in database and include them on the map
      // in the future this should only get the bathrooms in a certain range
      var scope = this;
-     // this.$http.get('http://localhost:3000/fake/getAll').then((response) => {
-     //    let r = response.body
-     //    for (let i=0; i<r.length; i++) {
-     //      scope.markers.push({
-     //        position: {lat: r[i].latitude, lng: r[i].longitude},
-     //        label: r[i].name,
-     //        id: r[i]._id,
-     //        hours: r[i].hours,
-     //        address: r[i].location
-     //      })
-     //    }
-     //  }, (error) => {
-     //    console.log('error');
-     //  }) 
-     this.$http.get('http://localhost:3000/fake/findAll').then((response) => {
-      // console.log('real data below');
-        console.log(response);
+     let today = (new Date()).getDay();
+     scope.dayOfWeek = today > 0 ? today - 1 : 6 
+
+     // this.$http.get('http://localhost:3000/fake/findAll').then((response) => {
+     this.$http.get( server_url + '/fake/findAll').then((response) => {
         let r = response.body
         for (let i=0; i<r.length; i++) {
           scope.markers.push({
             position: {lat: r[i].latitude, lng: r[i].longitude},
             label: r[i].name,
             id: r[i]._id,
-            hours: r[i].hours,
-            address: r[i].location
+            hours: r[i].hours[scope.dayOfWeek],
+            address: r[i].location,
+            googleID: r[i].googleID,
+            open_now: r[i].open_now
           })
         }
      }, (error) => {
@@ -84,7 +51,7 @@ data() {
      }) 
   },
   mounted: function(){
-      var scope = this;
+     var scope = this;
       var el = document.getElementById('map');
           if (navigator.geolocation) {
               navigator.geolocation.getCurrentPosition(
@@ -103,92 +70,253 @@ data() {
     function initMap(){
         const map = new google.maps.Map(el, {
           zoom: 16,
+          // #33bf86
           center: scope.center,
                     styles: [
-            {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
-            {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
-            {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+        {
+          "elementType": "geometry",
+          "stylers": [
             {
-              featureType: 'administrative.locality',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#d59563'}]
-            },
-            {
-              featureType: 'poi',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#d59563'}]
-            },
-            {
-              featureType: 'poi.park',
-              elementType: 'geometry',
-              stylers: [{color: '#263c3f'}]
-            },
-            {
-              featureType: 'poi.park',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#6b9a76'}]
-            },
-            {
-              featureType: 'road',
-              elementType: 'geometry',
-              stylers: [{color: '#38414e'}]
-            },
-            {
-              featureType: 'road',
-              elementType: 'geometry.stroke',
-              stylers: [{color: '#212a37'}]
-            },
-            {
-              featureType: 'road',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#9ca5b3'}]
-            },
-            {
-              featureType: 'road.highway',
-              elementType: 'geometry',
-              stylers: [{color: '#746855'}]
-            },
-            {
-              featureType: 'road.highway',
-              elementType: 'geometry.stroke',
-              stylers: [{color: '#1f2835'}]
-            },
-            {
-              featureType: 'road.highway',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#f3d19c'}]
-            },
-            {
-              featureType: 'transit',
-              elementType: 'geometry',
-              stylers: [{color: '#2f3948'}]
-            },
-            {
-              featureType: 'transit.station',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#d59563'}]
-            },
-            {
-              featureType: 'water',
-              elementType: 'geometry',
-              stylers: [{color: '#17263c'}]
-            },
-            {
-              featureType: 'water',
-              elementType: 'labels.text.fill',
-              stylers: [{color: '#515c6d'}]
-            },
-            {
-              featureType: 'water',
-              elementType: 'labels.text.stroke',
-              stylers: [{color: '#17263c'}]
+              "color": "#1d2c4d"
             }
           ]
+        },
+        {
+          "elementType": "labels.text.fill",
+          "stylers": [
+            {
+              "color": "#8ec3b9"
+            }
+          ]
+        },
+        {
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            {
+              "color": "#1a3646"
+            }
+          ]
+        },
+        {
+          "featureType": "administrative.country",
+          "elementType": "geometry.stroke",
+          "stylers": [
+            {
+              "color": "#4b6878"
+            }
+          ]
+        },
+        {
+          "featureType": "administrative.land_parcel",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            {
+              "color": "#64779e"
+            }
+          ]
+        },
+        {
+          "featureType": "administrative.province",
+          "elementType": "geometry.stroke",
+          "stylers": [
+            {
+              "color": "#4b6878"
+            }
+          ]
+        },
+        {
+          "featureType": "landscape.man_made",
+          "elementType": "geometry.stroke",
+          "stylers": [
+            {
+              "color": "#334e87"
+            }
+          ]
+        },
+        {
+          "featureType": "landscape.natural",
+          "elementType": "geometry",
+          "stylers": [
+            {
+              "color": "#023e58"
+            }
+          ]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "geometry",
+          "stylers": [
+            {
+              "color": "#283d6a"
+            }
+          ]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            {
+              "color": "#6f9ba5"
+            }
+          ]
+        },
+        {
+          "featureType": "poi",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            {
+              "color": "#1d2c4d"
+            }
+          ]
+        },
+        {
+          "featureType": "poi.park",
+          "elementType": "geometry.fill",
+          "stylers": [
+            {
+              "color": "#023e58"
+            }
+          ]
+        },
+        {
+          "featureType": "poi.park",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            {
+              "color": "#3C7680"
+            }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "geometry",
+          "stylers": [
+            {
+              "color": "#304a7d"
+            }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            {
+              "color": "#98a5be"
+            }
+          ]
+        },
+        {
+          "featureType": "road",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            {
+              "color": "#1d2c4d"
+            }
+          ]
+        },
+        {
+          "featureType": "road.highway",
+          "elementType": "geometry",
+          "stylers": [
+            {
+              "color": "#33bf86"
+            }
+          ]
+        },
+        {
+          "featureType": "road.highway",
+          "elementType": "geometry.stroke",
+          "stylers": [
+            {
+              "color": "#255763"
+            }
+          ]
+        },
+        {
+          "featureType": "road.highway",
+          "elementType": "labels.text.fill",
+          "stylers": [
+            {
+              "color": "#b0d5ce"
+            }
+          ]
+        },
+        {
+          "featureType": "road.highway",
+          "elementType": "labels.text.stroke",
+          "stylers": [
+            {
+              "color": "#023e58"
+            }
+          ]
+        },
+  // {
+  //   "featureType": "transit",
+  //   "elementType": "labels.text.fill",
+  //   "stylers": [
+  //     {
+  //       "color": "#98a5be"
+  //     }
+  //   ]
+  // },
+  // {
+  //   "featureType": "transit",
+  //   "elementType": "labels.text.stroke",
+  //   "stylers": [
+  //     {
+  //       "color": "#1d2c4d"
+  //     }
+  //   ]
+  // },
+  // {
+  //   "featureType": "transit.line",
+  //   "elementType": "geometry.fill",
+  //   "stylers": [
+  //     {
+  //       "color": "#283d6a"
+  //     }
+  //   ]
+  // },
+  // {
+  //   "featureType": "transit.station",
+  //   "elementType": "geometry",
+  //   "stylers": [
+  //     {
+  //       "color": "#3a4762"
+  //     }
+  //   ]
+  // },
+      {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+          {
+            "color": "#0e1626"
+          }
+        ]
+      },
+      {
+        "featureType": "water",
+        "elementType": "labels.text.fill",
+        "stylers": [
+          {
+            "color": "#4e6d70"
+          }
+        ]
+  }
+]
+
         });
         for (var i=0; i<scope.markers.length; i++){
+          let icon_url;
+          if (scope.markers[i].open_now == true) {
+            icon_url = {url :'src/assets/toilet-icon-blue.png' };
+          } else {
+            icon_url = {url: 'src/assets/toilet-icon-png-14017.png'};
+          }
           let marker = new google.maps.Marker({
             map: map,
-            icon: {url: 'toilet-icon-png-14017.png'},
+            icon: icon_url,
             position: scope.markers[i].position,
             name: scope.markers[i].label,
             id: scope.markers[i].id,
@@ -196,21 +324,52 @@ data() {
             address: scope.markers[i].address
           })
         marker.addListener('click', function() {
-            scope.markerClicked(marker);
-            infoWindow.setContent(document.getElementById('info-content').innerHTML);     
-            document.addEventListener('click', function(e) {
-              if (e.target && e.target.id == 'view-toilet-btn') {
-                scope.viewToilet();
-              } else if (e.target && e.target.id == 'close-window-btn') {
-                infoWindow.close();
-              }
-            })            
-            infoWindow.open(map, marker);
+          console.log('marker clicked')
+          function getRating(ID) {
+            scope.$http.get( server_url + '/fake/findOne/'+ID).then((response) => {
+                let reviews = response.body.reviews;
+                let reviewNumber = reviews.length;
+                let total = 0;
+                for (let i= 0; i<reviews.length; i++) {
+                  total += reviews[i].stars
+                }
+                let average = total/reviewNumber;
+                marker.ratingAverage = average;
+                scope.currentToilet = marker.id
+                scope.markerClicked(marker);
+                infoWindow.setContent(document.getElementById('info-content').innerHTML);     
+                infoWindow.open(map, marker);   
+               }, (error) => {
+                console.log(error);
+               })       
+          }
+          getRating(marker.id)
         });
         }
         var infoWindow = new google.maps.InfoWindow({
           content: scope.infoContent
         })
+      google.maps.event.addListener(infoWindow, 'domready', function() {
+         // Removes background from google maps infowindow so it can be styled!
+         var iwOuter = document.getElementsByClassName('gm-style-iw');
+         var iwBackground = iwOuter[0].previousSibling;
+         iwBackground.children[1].setAttribute('style', 'display:none')
+         iwBackground.children[3].setAttribute('style', 'display:none')
+      });
+      google.maps.event.addListener(map, "click", function(event) {
+        infoWindow.close();
+      });
+            document.addEventListener('click', function(e) {
+              if (e.target.parentElement.classList.contains('window-container-cell') || e.target.classList.contains('window-container-cell')) {
+                console.log('clicked');
+                console.log(scope.currentToilet);
+
+                // scope.viewToilet();
+                // scope.$router.push({path: "/toilet/"+scope.currentToilet})
+                window.location = '/toilet/'+scope.currentToilet
+                scope.currentToilet = '';
+              } 
+            }) 
     }
   },
   description: 'Kwikileaks map',
@@ -235,29 +394,50 @@ data() {
       }
     },
     markerClicked(toilet){
+      var scope = this;
       this.modalTitle = toilet.name;
       this.modalId = toilet.id;
       this.modalAddress = toilet.address;
       this.modalHours = toilet.hours;
-      this.$forceUpdate()
+      
+      this.modalRating = toilet.ratingAverage;
+      this.$forceUpdate();
+      function getImage(ID) {
+         scope.$http.get( server_url + '/fake/getImage/'+ID+'/1').then((response) => {
+          let photo = document.getElementById('photo');
+          if (response.body && response.body != '') {
+            console.log(photo);
+            let url = server_url + "/bathrooms/"+ID+"/"+response.body;
+            photo.style.backgroundImage = "url("+url+")";
+            console.log(photo)
+          } else {
+            photo.style.backgroundImage = 'url("../../src/assets/toilet_xs.jpeg")'
+          }
+         }, (error) => {
+          console.log(error);
+         }) 
+      }
       document.getElementById('info-content').innerHTML = 
             `<div class="window-container">
-
+              <div class="window-container-cell" id="window-container-title"><div>`+this.modalTitle+`</div></div>
               <div class="window-container-cell" id="photo">
               </div>
-              <div class="window-container-cell">Address: `+this.modalAddress+`</div>
-              <div class="window-container-cell">Hours: `+this.modalHours+`</div>
-              <div class="window-container-cell">Rating: `+5+`</div>
-              <div class="button-row">
-               <button id="view-toilet-btn" size="sm" variant="primary">See More</button>
-               <button id="close-window-btn" size="sm" variant="primary">Close</button>
-              </div>
+              <div class="window-container-cell"><div>Address: `+this.modalAddress+`</div></div>
+              <div class="window-container-cell"><div>Hours: `+this.modalHours+`</div></div>
+              <div class="window-container-cell"><div>Rating: `+this.modalRating+`</div></div>
+             
+               <!-- <div>Something else!</div> -->
+             
              </div>`
+      // getRating(scope.modalId);       
+      getImage(scope.modalId);
+
     },
     viewToilet(toilet){
-      console.log('go to page for this toilet')
-      console.log(this.modalId)
-      this.$router.push("/toilet/"+this.modalId)
+      // console.log('go to page for this toilet')
+      // console.log(this.modalId)
+      // console.log('go to page for' + this.currentToilet);
+      // this.$router.push("/toilet/"+this.currentToilet)
     }
   }
 
